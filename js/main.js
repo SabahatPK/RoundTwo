@@ -5,36 +5,26 @@ let promises = [
   d3.csv("data/GenderByProvince.csv"),
   d3.json("/data/pakistan/pakistan-districts.json"),
   d3.json("/data/pakistan/pakistan-provinces.json"),
+  //outs - this data will have to be replaced eventually:
   d3.csv("data/microfinance/pakMFDummyData.csv")
 ];
 
 let parseTime = d3.timeParse("%Y");
 let formatTime = d3.timeFormat("%B %d, %Y");
 
-//outs - DELETE THIS
-// var d1 = new Date();
-// var d2 = new Date(d1);
-// console.log(d1.getTime());
-// var same = d1.getTime() === d2.getTime();
-// var notSame = d1.getTime() !== d2.getTime();
-// console.log(same);
-// console.log(notSame);
-
 let sliderBegDate = new Date("1/1/2012");
-let sliderEndDate = new Date("12/31/2017");
+let sliderEndDate = new Date("12/31/2018");
 
 $("#dateLabel1").text("From " + formatTime(new Date("1/1/2012")));
-$("#dateLabel2").text(" to " + formatTime(new Date("12/31/2017")));
-//outs - there is def something wrong with the slider dates; they don't always align up
-//with the dates on charts; identify all the "wrong" dating logic with unit tests then figure out
-//what the pattern is and then FIX.
+$("#dateLabel2").text(" to " + formatTime(new Date("12/31/2018")));
+
 // Add jQuery UI slider
 $("#slider").slider({
   range: true,
-  min: new Date("2012").getTime(),
-  max: new Date("2019").getTime(),
+  min: new Date("1/1/2012").getTime(),
+  max: new Date("12/31/2018").getTime(),
   step: new Date("4/1/2010").getTime() - new Date("1/1/2010").getTime(),
-  values: [new Date("2012").getTime(), new Date("2019").getTime()],
+  values: [new Date("1/1/2012").getTime(), new Date("12/31/2018").getTime()],
   slide: function(event, ui) {
     sliderBegDate = new Date(ui.values[0]);
     sliderEndDate = new Date(ui.values[1]);
@@ -45,10 +35,11 @@ $("#slider").slider({
 });
 
 //Button to reset slider back to default dates
+//outs - slider Reset button sets end date to Nov 23 2018 instead of Dec 31 2018.
 $("#reset").click(function() {
   $("#slider").slider("values", [
-    new Date("2012").getTime(),
-    new Date("2019").getTime()
+    new Date("1/1/2012").getTime(),
+    new Date("12/31/2018").getTime()
   ]);
 
   let resetSliderDates = $("#slider").slider("values");
@@ -63,10 +54,6 @@ $("#reset").click(function() {
 });
 
 //outs - where does it make sense to add in regional comparisons, income gp comparisons
-//outs - Test this by adding delay diliberately; also needs to be on empty page; so slider has to be loaded after data?
-while (promises.length.length === 0) {
-  $("#loading").html("Data loading...");
-}
 
 Promise.all(promises).then(function(allData) {
   let agentData = allData[0];
@@ -125,12 +112,12 @@ Promise.all(promises).then(function(allData) {
   });
 
   //Prep and clean gender data
-  var nestedGenderData = d3 //outs - delete if not being used anywhere
-    .nest()
-    .key(function(d) {
-      return d.Province;
-    })
-    .entries(genderData);
+  // var nestedGenderData = d3 //outs - delete by Nov 20 if not being used anywhere
+  //   .nest()
+  //   .key(function(d) {
+  //     return d.Province;
+  //   })
+  //   .entries(genderData);
 
   let onlyAzadKashmir = genderData.filter(
     each => each.Province === "Azad Kashmir"
@@ -242,14 +229,6 @@ Promise.all(promises).then(function(allData) {
         keys2,
         smallDimensions
       );
-    } else if (graphType === "MFmap") {
-      mapOfPak = new MapChart(
-        "#chart-area3",
-        districts,
-        provinces,
-        pkDistMF,
-        largeDimensions
-      );
     } else if (graphType === "AccAndAgent") {
       stackAreaChart1 = new StackedArea(
         "#chart-area1",
@@ -263,6 +242,14 @@ Promise.all(promises).then(function(allData) {
         agentData,
         keys1,
         smallDimensions
+      );
+    } else if (graphType === "MFmapProvince" || "MFmapDistrict") {
+      mapOfPak = new MapChart(
+        "#chart-area3",
+        districts,
+        provinces,
+        pkDistMF,
+        largeDimensions
       );
     }
   });
@@ -278,11 +265,11 @@ function updateCharts() {
     stackAreaChart6.wrangleData(sliderBegDate, sliderEndDate);
     stackAreaChart7.wrangleData(sliderBegDate, sliderEndDate);
     stackAreaChart8.wrangleData(sliderBegDate, sliderEndDate);
-  } else if ($("#indicatorType").val() === "MFmap") {
-    mapOfPak.wrangleData(sliderBegDate, sliderEndDate);
   } else if ($("#indicatorType").val() === "AccAndAgent") {
     stackAreaChart1.wrangleData(sliderBegDate, sliderEndDate);
     stackAreaChart2.wrangleData(sliderBegDate, sliderEndDate);
+  } else if ($("#indicatorType").val() === "MFmapProvince" || "MFmapDistrict") {
+    mapOfPak.wrangleData(sliderBegDate, sliderEndDate);
   }
 }
 
@@ -339,4 +326,9 @@ let standAloneLegend = d3
     .attr("text-anchor", "end")
     .style("text-transform", "capitalize")
     .text(eachKey);
+});
+
+//Save viz button:
+d3.select("#saveButton").on("click", function() {
+  stackAreaChart1.saveViz();
 });
