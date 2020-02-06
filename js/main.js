@@ -19,17 +19,20 @@ $("#dateLabel1").text("From " + formatTime(new Date("1/1/2012")));
 $("#dateLabel2").text(" to " + formatTime(new Date("12/31/2018")));
 
 // Add jQuery UI slider
+//START Here; debugging slider;
+// https://stackoverflow.com/questions/41104415/js-dates-and-jquery-ui-slider-being-strange/41105624
 $("#slider").slider({
   range: true,
   min: new Date("1/1/2012").getTime(),
   max: new Date("12/31/2018").getTime(),
-  step: new Date("4/1/2010").getTime() - new Date("1/1/2010").getTime(),
+  step: 345600000,
   values: [new Date("1/1/2012").getTime(), new Date("12/31/2018").getTime()],
   slide: function(event, ui) {
     sliderBegDate = new Date(ui.values[0]);
     sliderEndDate = new Date(ui.values[1]);
     $("#dateLabel1").text("From " + formatTime(new Date(ui.values[0])));
     $("#dateLabel2").text(" to " + formatTime(new Date(ui.values[1])));
+
     updateCharts();
   }
 });
